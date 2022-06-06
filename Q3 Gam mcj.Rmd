@@ -1,0 +1,114 @@
+3.	Statistical modelling
+
+Using the mgcv package take the simulated breathing rate data and create a linear model and a GAM model using the lm() command and the gam() command respectively (the gam command is part of the mgcv package). Report the summary output of the lm and gam models
+
+Submit an R script with the code you used and with the reported statistics in the comments at the end of the script.
+
+
+Loading Libraries
+```{r}
+library(mgcv)
+library(tidyverse)
+library(dplyr)
+library(gratia)
+
+```
+
+```{r}
+sim_Br_data<- read.csv("/Users/martinchristy/Desktop/Q2data.csv")
+sim_Br_data<-sim_Br_data %>%
+  select(-c(X,X.1))
+sim_Br_data
+```
+#Lm model
+```{r}
+model2 <- lm(y ~ x, data = curveData)
+curveData$predicted <- predict(model2)   # Save the predicted values
+curveData$residuals <- residuals(model2) # Save the residual values
+```
+
+
+#lm model
+```{r}
+lm_model <- lm(data ~ time, data = sim_Br_data)
+summary(lm_model)
+
+```
+
+
+#lm model graph
+```{r}
+
+sim_Br_data$predicted <- predict(lm_model)   # Save the predicted values
+sim_Br_data$residuals <- residuals(lm_model) # Save the residual values
+
+ggplot(data=sim_Br_data, aes(x=time, y=data)) + 
+  geom_point() + 
+  geom_point(colour = "red") +
+  geom_smooth(method = "lm", se = FALSE, size = 1) +
+  #geom_path(aes(x=x, y=z), linetype = "dashed") 
+  geom_point(aes(y = predicted), shape = 1) +
+  geom_segment(aes(xend = time, yend = predicted), alpha = .5) +
+  geom_text(aes(y = predicted+(residuals/2), label = paste0("", round(residuals, 1), "")), size=2.5)
+
+  print(sum(sim_Br_data$residuals^2)) # the sum of squares of the residuals 
+  summary(lm_model)
+```
+#Sum of squares is large so model is not well approximated by the lm model
+#The residuals are a bit far apart from the regression line so better will be using gam
+
+#gam model 
+```{r}
+gam_model <- gam(data ~ s(time), data = sim_Br_data, method = "REML")
+summary(gam_model)
+```
+
+#Gam.check the result
+```{r}
+gam.check(gam_model)
+```
+
+Plotting the GAM
+
+```{r}
+plot(gam_model, residuals = TRUE, se=TRUE, rug=FALSE, pch = 1, cex = 0.5,shade = TRUE, shade.col = "rosybrown2")
+```
+
+
+#gam model graph
+```{r}
+sim_Br_data$predicted <- predict(gam_model)   # Save the predicted values
+sim_Br_data$residuals <- residuals(gam_model) # Save the residual values
+
+ggplot(data=sim_Br_data, aes(x=time, y=data)) + 
+  geom_point() + 
+  geom_point(colour = "red") +
+  #geom_smooth(method = "lm", se = FALSE, size = 1) +
+  geom_path(aes(x=time, y=predicted), colour = "blue") +
+  geom_point(aes(y = predicted), shape = 1) +
+  geom_segment(aes(xend = time, yend = predicted), alpha = .5) +
+  geom_text(aes(y = predicted+(residuals/2), label = paste0("", round(residuals, 1), "")), size=2.5)
+
+  
+  print(sum(sim_Br_data$residuals^2)) # the sum of squares of the GAM residuals
+```
+
+#The sum of squares error was reduced from lm_model(473.2408) to 453.681 when gam was used. SInce the p value is small, it indicates the k(number of basis function) is too low and ie, edf is close to k.
+#The edf value is 1.619 which is close to 1. If edf=1 or close to 1, it indicates linear model. Also from the sum of squares error we can observe there is only a slight change when gam was used.
+
+#Comparing lm() and gam()
+```{r}
+sim_Br_data$predicted <- predict(gam_model)   # Save the predicted values
+sim_Br_data$residuals <- residuals(gam_model) # Save the residual values
+
+ggplot(data=sim_Br_data, aes(x=time, y=data)) + 
+  geom_point() + 
+  geom_point(colour = "red") +
+  geom_smooth(method = "lm", se = FALSE, size = 1) +
+  geom_path(aes(x=time, y=predicted), colour = "blue") +
+  geom_point(aes(y = predicted), shape = 1) +
+  geom_segment(aes(xend = time, yend = predicted), alpha = .5) +
+  geom_text(aes(y = predicted+(residuals/2), label = paste0("", round(residuals, 1), "")), size=2.5)
+
+  print(sum(sim_Br_data$residuals^2)) # the sum of squares of the GAM residuals
+```

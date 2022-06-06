@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(dplyr)
+library(irr)
+library(kableExtra)
+library(krippendorffsalpha)
+
+```
+
+1.	Behavioural Measurement Data Wrangling and reliability.
+
+Some psychologists have used a coding scheme to assess the level of expressivity in people and they want to know if raters can reliably follow the scheme. Load in the Example Data and decide whether Krippendorf’s alpha or Intra-class Correlation is the more appropriate statistic to use. The irr package help file, the Hallgren (2012) and the Shrout and Fleiss (1979) journal articles should help you in making these decisions. Then wrangle the data into the appropriate form and report either Krippendorf’s alpha or your chosen icc statistics summary – if you choose icc say why you made the choices you did. Upload the R script you used to wrangle the data and the output from your chosen statistic to QOL.
+
+The data can be found in the ExampleData1.csv file.
+
+#Reading the csv file
+```{r}
+
+df<- read.csv("ExampleData1-3.csv")
+df
+sum(is.na(df)) #No null values
+unique(df$Rater) #There are 5 raters
+unique(df$Subject) #There are 12 subjects
+str(df)
+summary(df)
+```
+
+
+Data wrangling in tidy format for further processing
+```{r}
+df2 <- df%>%
+  spread(Rater,Expressivity)
+df2
+```
+#Removing unwanted column
+```{r}
+df3<- df2 %>% select(-Subject)
+df3
+```
+Summary of the new dataframe
+
+```{r}
+summary(df3)
+```
+
+#Decisions need to be made before running an ICC:
+
+1• Which model: One-way or Two-way? 
+
+#two way
+As all the raters rated all subjects individually , it is two-way ( fully crossed), as there is ratings for all subjects from all raters
+
+2• Absolute agreement or consistency?
+#Consistency
+Conistency over agreement is used as  rates are not comparable for each raters and being not in agreement with each other and they rate the same subject
+
+3• Unit of Analysis: Average-measures or Single-measures?
+#Average
+All subjects are coded by multiple raters and the average of their ratings is used for hypothesis testing, average-measures ICCs are appropriate. As the data is fully crossed, ICCs are applicable and get more reliable scores. 
+
+Assuming as mixed, as subject being random and raters as fixed.
+#There are no missing values in the dataset
+
+
+#For ICC(C,5) is applied since it is Two way, Consistency, Average. As the data is interval(continous) krippendorff's alpha Less flexible than ICC for continuous data
+```{r}
+icc(df3, "twoway", "consistency", "average")
+```
+
+#The reliability score is 0.445 which is fair agreement , So the 5 raters are in moderate agreement
+
+#Using Krippendorff's alpha
+```{r}
+kripp.alpha(t(as.matrix(df3)), method = "interval")
+```
+#As the data is interval(continous) krippendorff's alpha Less flexible than ICC for continuous data because of that, alpha is nearly zero showing very slight agreement between the raters.
+

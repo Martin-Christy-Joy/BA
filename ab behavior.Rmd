@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+1.	Behavioural Measurement Data Wrangling and reliability.
+
+Some psychologists have used a coding scheme to assess the level of expressivity in people and they want to know if raters can reliably follow the scheme. Load in the Example Data and decide whether Krippendorf’s alpha or Intra-class Correlation is the more appropriate statistic to use. The irr package help file, the Hallgren (2012) and the Shrout and Fleiss (1979) journal articles should help you in making these decisions. Then wrangle the data into the appropriate form and report either Krippendorf’s alpha or your chosen icc statistics summary – if you choose icc say why you made the choices you did. Upload the R script you used to wrangle the data and the output from your chosen statistic to QOL.
+
+The data can be found in the ExampleData1.csv file.
+
+
+
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(irr)
+```
+
+Load Data
+
+```{r}
+df <- read.csv("ExampleData1.csv")
+df
+```
+
+Data in tidy format - convert to table
+
+```{r}
+df2 <- df %>% spread(Rater, Expressivity)
+df2
+```
+All raters rate all subjects - fully crossed.
+
+Continuous data - not categorical - not obviously interval based.
+
+```{r}
+# drop subject column
+df3 <- df2 %>% select(-Subject)
+df3
+```
+Simple per-rater summary stats.
+
+```{r}
+summary(df3)
+```
+
+Because there are no missing values and the data is continuous - ICC is preferred although K's alpha can be calculated.
+
+Range of rates values is different (especially rater 4).
+
+for ICC:
+- two-way (fully crossed)
+- prefer consistency over agreement as the rater ranges are different and we do not have enough information to draw further conclusions
+- average
+- mixed (assuming raters are fixed - not really enough information to determine this)
+
+```{r}
+icc(df3, model = "twoway", type = "consistency", unit = "average")
+```
+
+ICC(C,k) = 0.445
+
+```{r}
+#kripp.alpha(t(as.matrix(df3)), method = "interval")
+```
+
+
